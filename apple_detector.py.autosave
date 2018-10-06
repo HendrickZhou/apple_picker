@@ -187,6 +187,7 @@ while(True):
 
             else:
                 # lost the frame: extend the area, and backward
+                appleRoi = []
                 #if appleRoi:
                 #    appleRoi = extendRoi(appleRoi)
 
