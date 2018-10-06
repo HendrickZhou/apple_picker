@@ -36,11 +36,11 @@ apple_th = (30, 75, 40, 70 , 20, 60)
 #maxPixelCnt =
 
 def borderCheck(Rect):
-    Rect[0] = max(Rect[0], 0)
-    Rect[1] = max(Rect[1], 0)
+    Rect_0 = max(Rect[0], 0)
+    Rect_1 = max(Rect[1], 0)
     maxW = min(Rect[2], SIZE[0] - Rect[0])
     maxH = min(Rect[3], SIZE[1] - Rect[1])
-    return (Rect[0], Rect[1], maxW, maxH)
+    return (Rect_0, Rect_1, maxW, maxH)
 
 def extendRoi(Rect):
     v_x = Rect[0]
@@ -233,9 +233,9 @@ while(True):
     if uartClass == 1:
         uart.write(ustruct.pack("b", 0x01))
 
-    # back
+    # stop
     if uartClass == 2:
-        uart.write(ustruct.pack("b", 0x02))
+        uart.write(ustruct.pack("b", 0x00))
 
     # cut
     if uartClass == 3:
