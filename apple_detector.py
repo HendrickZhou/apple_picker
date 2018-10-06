@@ -35,6 +35,13 @@ apple_th = (30, 75, 40, 70 , 20, 60)
 
 #maxPixelCnt =
 
+def borderCheck(Rect):
+    Rect[0] = max(Rect[0], 0)
+    Rect[1] = max(Rect[1], 0)
+    maxW = min(Rect[2], SIZE[0] - Rect[0])
+    maxH = min(Rect[3], SIZE[1] - Rect[1])
+    return (Rect[0], Rect[1], maxW, maxH)
+
 def extendRoi(Rect):
     v_x = Rect[0]
     v_y = Rect[1]
@@ -44,12 +51,12 @@ def extendRoi(Rect):
     xCenter = v_x + r_width / 2
     yCenter = v_y + r_height / 2
 
-    # extend the area
     r_width = r_width * 1.2
     r_height = r_height *1.2
 
     result = (int(xCenter - r_width/2), int(yCenter - r_height/2), int(r_width), int(r_height))
-    return result
+
+    return borderCheck(result)
 
 def extendRoiWithBias(Rect, last_flag):
     v_x = Rect[0]
@@ -80,7 +87,7 @@ def extendRoiWithBias(Rect, last_flag):
         y_b = 10
 
     result = (int(xCenter - r_width/2 + x_b/2), int(yCenter - r_height/2 + y_b/2), int(r_width), int(r_height))
-    return result
+    return borderCheck(result)
 
 def areaIsGood(Rect):
     r_w = Rect[2]
@@ -133,6 +140,11 @@ onForwardPeriod = 0 # flag for the forwarding status
 ## Main program
 while(True):
 
+    clock.tick()
+    print(clock.fps())
+    green_led.off()
+    blue_led.off()
+
     if onDirAdjustPeriod != 0:
         # select the y dir flag
         uartClass = 4
@@ -144,15 +156,8 @@ while(True):
             uartClass = 1
             onForwardPeriod -= 1
         else:
-
-            clock.tick()
             img = sensor.snapshot()
             img = img
-            print(clock.fps())
-
-
-            green_led.off()
-            blue_led.off()
 
         # find the blobs for apple
             # make sure the roi is not empty
@@ -187,9 +192,10 @@ while(True):
 
             else:
                 # lost the frame: extend the area, and backward
+                appleRoi = []
                 #if appleRoi:
-                #    appleRoi = extendRoi(appleRoi)
-
+                    #appleRoi = extendRoi(appleRoi)
+                    #img.draw_rectangle(appleRoi, color = (0, 0, 255))
                 # select the backwards flag
                 uartClass = 2
                 print("obj not found!")
