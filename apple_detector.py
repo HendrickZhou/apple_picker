@@ -32,8 +32,10 @@ apple_th = (30, 75, 40, 70 , 20, 60)
 
 #maxRatio = 1.5
 #minDensity = 0.4
-
 #maxPixelCnt =
+deltaXPixPerCycle = 10
+deltaYPixPerCycle = 10
+
 
 def borderCheck(Rect):
     Rect_0 = max(Rect[0], 0)
@@ -92,7 +94,7 @@ def extendRoiWithBias(Rect, last_flag):
     result = (int(xCenter - r_width/2 + x_b/2), int(yCenter - r_height/2 + y_b/2), int(r_width), int(r_height))
     return borderCheck(result)
 
-def areaIsGood(Rect):
+def TargetIsCloseEnough(Rect):
     r_w = Rect[2]
     r_h = Rect[3]
     #area = r_w * r_h
@@ -103,12 +105,18 @@ def areaIsGood(Rect):
 
 def judgeDirection(Blob):
     size = Blob.area()
+    width = Blob.w()
+    height = Blob.h()
+
     min_b_x = 10 * (1 + size/AREA)
     min_b_y = 10 * (1 + size/AREA)
     obj_center_x = Blob.cx()
     obj_center_y = Blob.cy()
     bias_x = obj_center_x - CENTER[0]
     bias_y = obj_center_y - CENTER[1]
+
+    adj_cnt_x = int((bias_x - deltaXPixPerCycle) / deltaXPixPerCycle + 1)
+    adj_cnt_y = int((bias_y - deltaYPixPerCycle) / deltaYPixPerCycle + 1)
 
     if abs(bias_x) < min_b_x:
         x_flag = 0 # still
@@ -123,11 +131,13 @@ def judgeDirection(Blob):
         y_flag = 1 # target is down
     else:
         y_flag = 2 # target is up
-    return [x_flag, y_flag]
+    return [x_flag, y_flag], [adj_cnt_x, adj_cnt_y]
 
 
 last_flag = [0, 0] # 0 for x, 1 for y
-onDirAdjustPeriod = 0 # flag for the direction adjustment status
+onDirAdjustXPeriod = 0
+onDirAdjustYPeriod = 0
+# flag for the direction adjustment status
 onForwardPeriod = 0 # flag for the forwarding status
 
 #uartClass:
@@ -146,11 +156,17 @@ while(True):
     green_led.off()
     blue_led.off()
 
-    if onDirAdjustPeriod != 0:
+    if onDirAdjustXPeriod > 0:
+        # select the x dir flag
+        uartClass = 0
+        onDirAdjustXPeriod -= 1
+
+    elif onDirAdjustYPeriod > 0:
         # select the y dir flag
         uartClass = 4
-        onDirAdjustPeriod -= 1
-        onForwardPeriod = 1
+        onDirAdjustYPeriod -= 1
+        if onDirAdjustYPeriod == 0:
+            onForwardPeriod = 1
     else:
         if onForwardPeriod == 1:
             # select the forward flag
@@ -184,16 +200,27 @@ while(True):
                 img.draw_rectangle(appleRoi, color = (255, 255, 0))
                 print("obj found")
 
-                last_flag = judgeDirection(objBlob)
+                #[last_flag, last_adj_cnt] = judgeDirection(objBlob)
+                last_flag, last_adj_cnt = judgeDirection(objBlob)
+                #last_adj_cnt = last[1]
+                print("1")
+                print(last_flag)
+                print('\n')
+                #last_flag = last[0]
+                print("2")
+                print(last_adj_cnt)
+                onDirAdjustXPeriod = last_adj_cnt[0]
+                onDirAdjustYPeriod = last_adj_cnt[1]
                 # select the x flag
                 uartClass = 0
+                onDirAdjustXPeriod -= 1
 
                 # when the target is close enough, shift into auto mode
-                if areaIsGood(appleRoi):
+                if TargetIsCloseEnough(appleRoi):
                     #select the cut flag
                     uartClass = 3
 
-                onDirAdjustPeriod = 1
+
                 green_led.on()
 
 
