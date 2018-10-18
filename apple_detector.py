@@ -33,8 +33,8 @@ apple_th = (30, 75, 40, 70 , 20, 60)
 #maxRatio = 1.5
 #minDensity = 0.4
 #maxPixelCnt =
-deltaXPixPerCycle = 10
-deltaYPixPerCycle = 10
+deltaXPixPerCycle = 2
+deltaYPixPerCycle = 2
 
 
 def borderCheck(Rect):
@@ -295,5 +295,5 @@ while(True):
             uart.write(ustruct.pack("b", 0x05))
             print("%s sent" %("up"))
 
-    time.sleep(30)
+    #time.sleep(30)
     print('\n')
